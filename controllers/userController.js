@@ -5,7 +5,9 @@ const bcrypt = require("bcryptjs");
 const { body, validationResult } = require("express-validator");
 
 exports.users_get = asyncHandeler(async (req, res, next) => {
-  res.send("List of users");
+  // TODO - Add logic to access user info only if authorized
+  const allUsers = await User.find().exec();
+  res.json(allUsers);
 });
 
 exports.users_post = [
