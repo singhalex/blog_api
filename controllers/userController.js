@@ -79,5 +79,16 @@ exports.edit_user = asyncHandeler(async (req, res, next) => {
 });
 
 exports.delete_user = asyncHandeler(async (req, res, next) => {
-  res.send("Delete user");
+  const id = req.params.userId;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).json({ message: "Invalid UserID" });
+  }
+
+  if (!(await User.findById(id).exec())) {
+    res.status(400).json({ message: "User does not exist" });
+  } else {
+    await User.findByIdAndDelete(id).exec();
+    res.status(200).json({ message: "User deleted" });
+  }
 });
