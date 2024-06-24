@@ -3,6 +3,7 @@ const User = require("../models/users");
 const asyncHandeler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const { body, validationResult } = require("express-validator");
+const { default: mongoose, mongo } = require("mongoose");
 
 exports.users_get = asyncHandeler(async (req, res, next) => {
   // TODO - Add logic to access user info only if authorized
@@ -57,7 +58,20 @@ exports.users_post = [
 ];
 
 exports.user_get_single_user = asyncHandeler(async (req, res, next) => {
-  res.send("Get single user");
+  const id = req.params.userId;
+
+  // Check if request is a valid userID object
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).json({ message: "Invalid UserID" });
+  }
+
+  const user = await User.findById(id);
+
+  if (user) {
+    res.json(user);
+  } else {
+    res.status(404).json({ message: "User does not exist" });
+  }
 });
 
 exports.edit_user = asyncHandeler(async (req, res, next) => {
