@@ -65,7 +65,7 @@ exports.user_get_single_user = asyncHandeler(async (req, res, next) => {
     res.status(400).json({ message: "Invalid UserID" });
   }
 
-  const user = await User.findById(id);
+  const user = await User.findById(id).exec();
 
   if (user) {
     res.json(user);
