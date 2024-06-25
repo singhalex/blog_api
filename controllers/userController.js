@@ -73,9 +73,92 @@ exports.user_get_single_user = asyncHandeler(async (req, res, next) => {
   }
 });
 
-exports.edit_user = asyncHandeler(async (req, res, next) => {
-  res.send("Edit single user");
-});
+exports.edit_user = [
+  // Validate and sanitize fields
+  body("username")
+    .trim()
+    .isLength({ min: 3, max: 30 })
+    .withMessage("Usernmae must be between 3 and 30 characters"),
+  body("password")
+    .trim()
+    .isLength({ min: 4 })
+    .withMessage("Password must be at least 4 characters long"),
+
+  asyncHandeler(async (req, res, next) => {
+    const errors = validationResult(req);
+    console.log(errors);
+
+    if (!errors.isEmpty()) {
+      res.status(401).json(errors);
+      return;
+    }
+
+    const id = req.params.userId;
+
+    // Check if query is a valid ObjectID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({
+        errors: [
+          {
+            type: "fields",
+            value: req.params.userId,
+            msg: "Invalid UserID",
+            path: "username",
+            location: "body",
+          },
+        ],
+      });
+      return;
+    }
+
+    if (!(await User.findById(id).exec())) {
+      res.status(404).json({
+        errors: [
+          {
+            type: "fields",
+            value: req.params.userId,
+            msg: "User does not exist",
+            path: "username",
+            location: "body",
+          },
+        ],
+      });
+      return;
+    }
+
+    const user = await User.findById(id).exec();
+
+    // Find user with the same username
+    const existingUser = await User.findOne({
+      username: req.body.username,
+    }).exec();
+
+    if (user.id === existingUser?.id || !existingUser) {
+      bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
+        if (err) return next(err);
+
+        await User.findByIdAndUpdate(id, {
+          username: req.body.username,
+          password: hashedPassword,
+        });
+        res.status(201).send("User updated~!!!!");
+        return;
+      });
+    } else {
+      res.json({
+        errors: [
+          {
+            type: "fields",
+            value: req.body.username,
+            msg: "This username already exists",
+            path: "username",
+            location: "body",
+          },
+        ],
+      });
+    }
+  }),
+];
 
 exports.delete_user = asyncHandeler(async (req, res, next) => {
   const id = req.params.userId;
