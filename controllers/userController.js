@@ -3,13 +3,15 @@ const asyncHandeler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const { body, validationResult } = require("express-validator");
 const { default: mongoose, mongo } = require("mongoose");
+const issueJWT = require("../utils/jwtIssue");
 
+// GET ALL USERS
 exports.users_get = asyncHandeler(async (req, res, next) => {
-  // TODO - Add logic to access user info only if authorized
   const allUsers = await User.find().exec();
-  res.json(allUsers);
+  res.status(200).json(allUsers);
 });
 
+// CREATE NEW USER
 exports.users_post = [
   // Validate and sanitize fields
   body("username")
@@ -50,12 +52,20 @@ exports.users_post = [
         res.status(401).json(errors);
       } else {
         await user.save();
-        res.status(201).json({ message: "User created successfully" });
+        const jwt = issueJWT(user);
+        res
+          .status(201)
+          .json({
+            message: "User created successfully",
+            token: jwt.token,
+            expiresIn: jwt.expiresIn,
+          });
       }
     });
   }),
 ];
 
+// GET SINGLE USER
 exports.user_get_single_user = asyncHandeler(async (req, res, next) => {
   const id = req.params.userId;
 
@@ -73,6 +83,7 @@ exports.user_get_single_user = asyncHandeler(async (req, res, next) => {
   }
 });
 
+// EDIT EXISTING USER
 exports.edit_user = [
   // Validate and sanitize fields
   body("username")
@@ -141,6 +152,7 @@ exports.edit_user = [
           username: req.body.username,
           password: hashedPassword,
         });
+        // TODO - What should I send back?
         res.status(201).send("User updated~!!!!");
         return;
       });
@@ -160,6 +172,7 @@ exports.edit_user = [
   }),
 ];
 
+// DELETE USER
 exports.delete_user = asyncHandeler(async (req, res, next) => {
   const id = req.params.userId;
 
