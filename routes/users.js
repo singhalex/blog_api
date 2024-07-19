@@ -9,7 +9,7 @@ router.get("/", jwtValidation, userController.users_get);
 
 router.post("/", userController.users_post);
 
-router.get("/:userId", userController.user_get_single_user);
+router.get("/:userId", userController.get_single_user);
 
 router.put("/:userId", userController.edit_user);
 

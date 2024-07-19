@@ -53,20 +53,18 @@ exports.users_post = [
       } else {
         await user.save();
         const jwt = issueJWT(user);
-        res
-          .status(201)
-          .json({
-            message: "User created successfully",
-            token: jwt.token,
-            expiresIn: jwt.expiresIn,
-          });
+        res.status(201).json({
+          message: "User created successfully",
+          token: jwt.token,
+          expiresIn: jwt.expiresIn,
+        });
       }
     });
   }),
 ];
 
 // GET SINGLE USER
-exports.user_get_single_user = asyncHandeler(async (req, res, next) => {
+exports.get_single_user = asyncHandeler(async (req, res, next) => {
   const id = req.params.userId;
 
   // Check if request is a valid userID object
